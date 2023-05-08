@@ -1,7 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import subprocess
 import optparse
+import re
+
+mac_regex = r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w"
+
+# todo include an argument so the user can display available interfaces
+# todo include an error handling if the specified interface does not exist
 
 
 def get_arguments():
@@ -24,6 +30,29 @@ def change_mac(interface_card, new_mac):
     subprocess.call(["ifconfig", interface_card, "up"])
 
 
+def get_current_mac(interface):
+    ifconfig_result = subprocess.check_output(["ifconfig", interface])
+    mac_address_search_result = re.search(mac_regex, ifconfig_result)
+
+    if mac_address_search_result:
+        # print(mac_address_search_result.group(0))
+        return mac_address_search_result.group(0)
+    else:
+        print("[-] Could not read MAC address on the specified interface.")
+
+
 user_input = get_arguments()
+
+current_mac = get_current_mac(user_input.interface_card)
+print("current MAC: " + str(current_mac))
+
 change_mac(user_input.interface_card, user_input.new_mac)
+
+current_mac = get_current_mac(user_input.interface_card)
+
+if current_mac == user_input.new_mac:
+    print("[+] MAC address was successfully changed to " + current_mac)
+else:
+    print("[-] MAC address did not get changed.")
+
 
